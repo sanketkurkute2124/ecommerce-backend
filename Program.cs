@@ -11,7 +11,21 @@ namespace ECommerceApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            //builder.WebHost.ConfigureKestrel(options =>
+            //{
+            //    options.ListenAnyIP(80); // listen on HTTP port 80
+            //});
 
+            var portEnv = Environment.GetEnvironmentVariable("PORT");
+            if(int.TryParse(portEnv,out var portNumber))
+            {
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.ListenAnyIP(portNumber);
+                }
+
+                );
+            }
             // Add services to the container.
 
             builder.Services.AddControllers()
@@ -38,8 +52,12 @@ namespace ECommerceApp
             builder.Services.AddSwaggerGen();
 
             // Configure EF Core with SQL Server
+            //builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            //options.UseSqlServer(builder.Configuration.GetConnectionString("EFCoreDBConnection")))
+
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("EFCoreDBConnection")));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("EFCoreDBConnection")));
             builder.Services.AddScoped<CustomerService>();
             builder.Services.AddScoped<AddressService>();
             builder.Services.AddScoped<CategoryService>();
@@ -69,11 +87,11 @@ namespace ECommerceApp
             app.UseAuthorization();
 
             app.MapControllers();
-
-            //app.Run();
+                
+            app.Run();
             //for the deployment of the application on Azure, we need to use the following code instead of app.Run();
-            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-            app.Run($"http://0.0.0.0:{port}");
+            //var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            //app.Run($"http://0.0.0.0:{port}");
         }
     }
 }
